@@ -13,6 +13,7 @@ import za.ac.ladzani.uptimeMonitor.mappers.PingLogMapper;
 import za.ac.ladzani.uptimeMonitor.mappers.SiteDetailsMapper;
 import za.ac.ladzani.uptimeMonitor.services.PingLogService;
 import za.ac.ladzani.uptimeMonitor.services.SiteDetailsService;
+import za.ac.ladzani.uptimeMonitor.utils.Utils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +43,7 @@ public class ApiSiteController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("web-service already exists");
         }
         SiteDetails entity = siteDetailsMapper.toEntity(request);
+        entity.setSiteId(Utils.getUUID());
         SiteDetails savedEntity = siteDetailsService.registerService(entity);
         return new ResponseEntity<>(siteDetailsMapper.toDto(savedEntity), HttpStatus.CREATED);
     }
