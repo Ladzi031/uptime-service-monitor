@@ -21,7 +21,7 @@ public class EmailNotificationProxy implements NotificationProxy {
     @Override
     public void notify(SiteDetails siteDetails,  long httpResponseStatus) {
         if(spamNotificationHandler.shouldSendAlert(siteDetails.getSiteId())) {
-            // proceed sending the notification...
+            // proceed sending the notification... Java Mail-Sender Machinery will go in here...
             spamNotificationHandler.updateSpamPreventionCache(siteDetails.getSiteId());
             logger.info("notification for web service failure: "+ siteDetails.getServiceName() +" has been sent");
         }else {
