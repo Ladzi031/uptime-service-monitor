@@ -8,7 +8,7 @@ import za.ac.ladzani.uptimeMonitor.domain.entity.PingLog;
 import java.util.UUID;
 
 @Repository
-public interface PingLogRepository extends CrudRepository<PingLog, UUID> {
+public interface PingLogRepository extends CrudRepository<PingLog, String> {
 
     @Query("SELECT * FROM PING_LOG WHERE SITE_ID = :siteId")
     Iterable<PingLog> findAllPingLogById(UUID siteId);

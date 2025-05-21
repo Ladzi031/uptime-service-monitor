@@ -1,4 +1,4 @@
-package za.ac.ladzani.uptimeMonitor.controllers.integrations;
+package za.ac.ladzani.uptimeMonitor.controllers.RESTful;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -15,7 +15,6 @@ import za.ac.ladzani.uptimeMonitor.services.PingLogService;
 import za.ac.ladzani.uptimeMonitor.services.SiteDetailsService;
 import za.ac.ladzani.uptimeMonitor.utils.Utils;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -37,7 +36,7 @@ public class ApiSiteController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerService(@Valid @RequestBody RegisterServiceRequest request) {
+    public ResponseEntity<?> registerService(@RequestBody @Valid RegisterServiceRequest request) {
         Predicate<SiteDetails> serviceExits = site -> Objects.equals(request.getServiceHealthCheckEndpoint(), site.getServiceHealthCheckEndpoint());
         if(siteDetailsService.getAllRegisteredServices().stream().anyMatch(serviceExits)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("web-service already exists");
@@ -66,12 +65,12 @@ public class ApiSiteController {
            return new ResponseEntity<>(siteList, HttpStatus.OK);
        }
        SiteDetails siteDetails = siteDetailsService.getServiceById(siteId);
-       var pingLogs = pingLogService.findLatestPingLog(UUID.fromString(siteDetails.getSiteId()));
+       List<PingLog> pingLogs = pingLogService.findAllPingLogBySiteId(UUID.fromString(siteDetails.getSiteId()));
        SiteDetailsDto siteDetailsDto = siteDetailsMapper.toDto(siteDetails);
-       siteDetailsDto.setPingLogs(Arrays.asList(pingLogMapper.toDto(pingLogs)));
+       List<PingLogDto> pingLogDtos = pingLogs.stream().map(pingLogMapper::toDto).toList();
+       siteDetailsDto.setPingLogs(pingLogDtos);
        return new ResponseEntity<>(siteDetailsDto, HttpStatus.OK);
     }
-
     @PutMapping
     public ResponseEntity<SiteDetailsDto> updateService(@RequestBody SiteDetailsDto newSiteDetail) {
        SiteDetails siteDetails = siteDetailsMapper.toEntity(newSiteDetail);
@@ -99,5 +98,10 @@ public class ApiSiteController {
         return ResponseEntity.noContent().build();
     }
 
-    // search for logs within a certain range with dates
+    @GetMapping("/metric/{siteId")
+    public ResponseEntity<Double> getSiteMetric(@PathVariable UUID siteId) {
+       Double result = pingLogService.calculateUptimePercentage(siteId);
+       return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
 }

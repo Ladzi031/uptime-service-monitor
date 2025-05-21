@@ -5,10 +5,12 @@ import org.springframework.transaction.annotation.Transactional;
 import za.ac.ladzani.uptimeMonitor.domain.entity.SiteDetails;
 import za.ac.ladzani.uptimeMonitor.exceptions.EntityNotFoundException;
 import za.ac.ladzani.uptimeMonitor.repositories.SiteDetailsRepository;
+import za.ac.ladzani.uptimeMonitor.services.PingLogService;
 import za.ac.ladzani.uptimeMonitor.services.SiteDetailsService;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -16,9 +18,12 @@ import java.util.stream.StreamSupport;
 public class SiteDetailsServiceImpl implements SiteDetailsService {
 
     private final SiteDetailsRepository siteDetailsRepository;
+    private final PingLogService pingLogService;
+    private final Logger logger = Logger.getLogger(SiteDetailsServiceImpl.class.getName());
 
-    public SiteDetailsServiceImpl(SiteDetailsRepository siteDetailsRepository) {
+    public SiteDetailsServiceImpl(SiteDetailsRepository siteDetailsRepository, PingLogService pingLogService) {
         this.siteDetailsRepository = siteDetailsRepository;
+        this.pingLogService = pingLogService;
     }
 
     @Override
@@ -33,19 +38,22 @@ public class SiteDetailsServiceImpl implements SiteDetailsService {
 
     @Override
     public SiteDetails getServiceById(UUID siteId) {
-        return siteDetailsRepository.findById(siteId).orElseThrow(() -> new EntityNotFoundException("entity with id "+ siteId + " does not exist"));
+        return siteDetailsRepository.findById(siteId.toString()).orElseThrow(() -> new EntityNotFoundException("entity with id "+ siteId + " does not exist"));
     }
 
     @Override
     public SiteDetails updateServiceDetails(SiteDetails siteDetails) {
-        SiteDetails existingSiteDetails = getServiceById(UUID.fromString(siteDetails.getSiteId()));
-        existingSiteDetails.setServiceName(siteDetails.getServiceName());
-        existingSiteDetails.setServiceHealthCheckEndpoint(siteDetails.getServiceHealthCheckEndpoint());
-        return siteDetailsRepository.save(existingSiteDetails);
+        if(siteDetailsRepository.existsById(siteDetails.getSiteId())) {
+            var intValue = siteDetailsRepository.update(siteDetails.getServiceName(), siteDetails.getServiceHealthCheckEndpoint(), siteDetails.getSiteId());
+            logger.info("update call result: "+ intValue);
+            return this.getServiceById(UUID.fromString(siteDetails.getSiteId()));
+        }
+        throw new EntityNotFoundException("entity with id: "+ siteDetails.getSiteId()+ " does not exists");
     }
 
     @Override
     public void deleteService(UUID siteId) {
-        siteDetailsRepository.deleteById(siteId);
+        pingLogService.deleteAllPingLogsForSite(siteId);
+        siteDetailsRepository.deleteById(siteId.toString());
     }
 }

@@ -1,5 +1,6 @@
 package za.ac.ladzani.uptimeMonitor.services.impl;
 
+import jakarta.mail.MessagingException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -38,15 +39,14 @@ public class SchedulerServiceImpl implements SchedulerService {
     
     @Scheduled(timeUnit = TimeUnit.SECONDS, fixedRate = 6L, initialDelay = 1L)
     @Override
-    public void fire() {
+    public void fire() throws MessagingException {
         List<SiteDetails> services = siteDetailsService.getAllRegisteredServices();
         for(SiteDetails service: services) {
             PingLog result = runPing(service);
             if(!result.getSuccess()) {
                 notificationProxy.notify(service, result.getHttpResponseStatus());
                 pingLogService.savePingLog(result);
-            }else {
-                System.out.println("FROM scheduler after first run: "+ result.getSiteId());
+            }else {;
                 PingLog latestPingLog = pingLogService.findLatestPingLog(UUID.fromString(result.getSiteId()));
                 if(latestPingLog == null) {
                     pingLogService.savePingLog(result);

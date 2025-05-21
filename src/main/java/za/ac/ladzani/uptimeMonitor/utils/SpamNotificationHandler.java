@@ -28,9 +28,9 @@ public class SpamNotificationHandler {
     }
 
     public boolean shouldSendAlert(String siteId) {
-        LocalDateTime checkLastAlert = spamPreventionCache.get(siteId).lastAlert();
-        if(Objects.nonNull(checkLastAlert)) {
-            return Duration.between(checkLastAlert, LocalDateTime.now()).toMinutes() > ALERT_INTERVAL_VALUE.toMinutes();
+        ServiceStatus checkLastAlert = spamPreventionCache.get(siteId);
+        if(Objects.nonNull(checkLastAlert.lastAlert)) {
+            return Duration.between(checkLastAlert.lastAlert, LocalDateTime.now()).toMinutes() > ALERT_INTERVAL_VALUE.toMinutes();
         }
         return true;
     }

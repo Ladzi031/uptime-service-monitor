@@ -32,7 +32,6 @@ public class PingLogServiceImpl implements PingLogService {
     public List<PingLog> findAllPingLogBySiteId(UUID siteId) {
         List<PingLog> logList = new ArrayList<>();
         StreamSupport.stream(logRepository.findAllPingLogById(siteId).spliterator(), false).forEach(logList::add);
-        System.out.println("find all by site ID size: "+ logList.size());
         return logList;
     }
 
@@ -72,6 +71,9 @@ public class PingLogServiceImpl implements PingLogService {
     public Double calculateUptimePercentage(UUID siteId) {
         long successfulPings = findAllPingLogBySiteId(siteId).stream().filter(PingLog::getSuccess).count();
         long totalPings = (long) findAllPingLogBySiteId(siteId).size();
-        return (successfulPings / totalPings ) * 100.0;
+        if(totalPings > 0) {
+            return (successfulPings / totalPings ) * 100.0;
+        }
+        return -1.0;
     }
 }
