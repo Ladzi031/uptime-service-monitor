@@ -98,7 +98,7 @@ public class ApiSiteController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/metric/{siteId")
+    @GetMapping("/metric/{siteId}")
     public ResponseEntity<Double> getSiteMetric(@PathVariable UUID siteId) {
        Double result = pingLogService.calculateUptimePercentage(siteId);
        return new ResponseEntity<>(result, HttpStatus.OK);
